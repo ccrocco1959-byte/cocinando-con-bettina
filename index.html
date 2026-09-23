@@ -1,0 +1,437 @@
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cocinando con Bettina</title>
+<meta name="theme-color" content="#ff7e5f">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color:transparent; }
+  body { background: linear-gradient(135deg,#fff8f0,#ffe8d6); color:#3d2b1f; padding-bottom:80px; min-height:100vh; }
+  header { background: linear-gradient(135deg,#ff7e5f,#feb47b); padding:20px; text-align:center; color:white; box-shadow:0 4px 10px rgba(0,0,0,0.15); position:sticky; top:0; z-index:100; }
+  header h1 { font-size:1.8em; }
+  header p { font-size:0.9em; opacity:0.9; }
+  .container { max-width:600px; margin:auto; padding:15px; }
+  .card { background:white; border-radius:18px; padding:18px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+  h2 { color:#e85d04; margin-bottom:10px; font-size:1.2em; }
+  .tag-input { display:flex; gap:8px; margin-bottom:10px; }
+  input[type=text] { flex:1; padding:12px; border-radius:12px; border:2px solid #ffd6a5; font-size:1em; outline:none; }
+  input[type=text]:focus { border-color:#ff7e5f; }
+  button { border:none; border-radius:12px; padding:12px 18px; font-weight:bold; cursor:pointer; transition:0.2s; font-size:1em; font-family:inherit; }
+  .btn-add { background:#ff7e5f; color:white; white-space:nowrap; }
+  .btn-add:active { transform:scale(0.96); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:#ffe8d6; padding:8px 12px; border-radius:20px; font-size:0.9em; display:flex; align-items:center; gap:6px; }
+  .chip .rm { background:none; border:none; color:#e85d04; font-weight:bold; padding:0 0 0 4px; cursor:pointer; font-size:1em; }
+  .opciones { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .opcion { background:#fff3e6; border:2px solid #ffd6a5; padding:8px 14px; border-radius:20px; font-size:0.9em; cursor:pointer; transition:0.2s; }
+  .opcion.selected { background:#ff7e5f; color:white; border-color:#ff7e5f; }
+  .btn-generar { background:linear-gradient(135deg,#e85d04,#ff7e5f); color:white; width:100%; padding:16px; font-size:1.1em; border-radius:14px; margin-top:10px; }
+  .btn-generar:active { transform:scale(0.98); }
+  .btn-generar:disabled { opacity:0.6; }
+  .switch-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; background:#fff3e6; padding:12px; border-radius:12px; }
+  .switch { position:relative; width:50px; height:26px; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; cursor:pointer; inset:0; background:#ffd6a5; border-radius:26px; transition:0.3s; }
+  .slider:before { content:""; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
+  input:checked + .slider { background:#ff7e5f; }
+  input:checked + .slider:before { transform:translateX(24px); }
+  .receta-card { border:2px solid #ffe8d6; border-radius:16px; padding:15px; margin-bottom:12px; }
+  .receta-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .receta-titulo { font-weight:bold; color:#e85d04; font-size:1.1em; }
+  .badge { background:#ffe8d6; padding:4px 10px; border-radius:12px; font-size:0.75em; font-weight:bold; }
+  .receta-info { display:flex; gap:10px; flex-wrap:wrap; font-size:0.85em; color:#7a5c3e; margin:8px 0; }
+  .receta-info span { background:#fff3e6; padding:4px 10px; border-radius:10px; }
+  .receta-botones { display:flex; gap:8px; margin-top:10px; }
+  .btn-ver { background:#3d2b1f; color:white; flex:1; }
+  .btn-guardar { background:#25d366; color:white; flex:1; }
+  .btn-whatsapp { background:#25d366; color:white; }
+  nav { position:fixed; bottom:0; left:0; right:0; background:white; display:flex; box-shadow:0 -4px 10px rgba(0,0,0,0.1); z-index:100; }
+  nav button { flex:1; background:none; border-radius:0; padding:14px; color:#999; }
+  nav button.active { color:#ff7e5f; }
+  .hidden { display:none; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:flex-end; z-index:200; }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:white; width:100%; max-height:85vh; overflow-y:auto; border-radius:24px 24px 0 0; padding:20px; }
+  .modal h3 { color:#e85d04; margin-bottom:10px; }
+  .modal ul, .modal ol { margin:10px 0 10px 20px; }
+  .modal li { margin-bottom:6px; }
+  .btn-cerrar { background:#eee; width:100%; margin-top:10px; }
+  .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#3d2b1f; color:white; padding:12px 20px; border-radius:20px; font-size:0.9em; z-index:300; animation:fadein 0.3s; }
+  @keyframes fadein { from{opacity:0; transform:translate(-50%,10px);} to{opacity:1; transform:translate(-50%,0);} }
+  .empty-state { text-align:center; padding:40px 20px; color:#a88; }
+  .empty-state .emoji { font-size:3em; margin-bottom:10px; }
+  .loader { display:flex; flex-direction:column; align-items:center; padding:30px; gap:12px; }
+  .spinner { width:40px; height:40px; border:4px solid #ffe8d6; border-top-color:#ff7e5f; border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .ia-badge { display:inline-flex; align-items:center; gap:4px; background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:10px; font-size:0.7em; font-weight:bold; margin-left:6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>👩‍🍳 Cocinando con Bettina</h1>
+  <p>Recetas inteligentes con IA <span class="ia-badge">✨ Gemini AI</span></p>
+</header>
+
+<div class="container">
+
+  <!-- PANTALLA NUEVA RECETA -->
+  <div id="screen-nueva">
+
+    <div class="card">
+      <div class="switch-row">
+        <span id="label-modo">🍲 Tengo sobras para reutilizar</span>
+        <label class="switch">
+          <input type="checkbox" id="switch-sin-sobras">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div id="bloque-sobras">
+        <h2>🍛 Sobras de comida</h2>
+        <div class="tag-input">
+          <input type="text" id="input-sobra" placeholder="Ej: arroz, pollo al horno...">
+          <button class="btn-add" id="btn-add-sobra">Agregar</button>
+        </div>
+        <div class="chips" id="chips-sobras"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🥫 Alacena / Heladera</h2>
+      <div class="tag-input">
+        <input type="text" id="input-alacena" placeholder="Ej: huevos, cebolla, queso...">
+        <button class="btn-add" id="btn-add-alacena">Agregar</button>
+      </div>
+      <div class="chips" id="chips-alacena"></div>
+    </div>
+
+    <div class="card">
+      <h2>🥗 Tipo de dieta</h2>
+      <div class="opciones" id="opciones-dieta"></div>
+    </div>
+
+    <div class="card">
+      <h2>😋 Preferencia de sabor</h2>
+      <div class="opciones" id="opciones-sabor"></div>
+    </div>
+
+    <button class="btn-generar" id="btn-generar">✨ Generar 3 recetas con IA</button>
+
+    <div id="resultado-container"></div>
+
+  </div>
+
+  <!-- PANTALLA GUARDADOS -->
+  <div id="screen-guardados" class="hidden">
+    <h2 style="margin-bottom:15px;">⭐ Mis recetas guardadas</h2>
+    <div id="lista-guardados"></div>
+  </div>
+
+</div>
+
+<nav>
+  <button id="nav-nueva" class="active">🍳 Nueva</button>
+  <button id="nav-guardados">⭐ Guardadas</button>
+</nav>
+
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+(function(){
+
+  var DIETAS = ['Sin restricción','Keto','Vegana','Vegetariana','Apta Celíaca','Diabética','Baja en sodio','Baja en grasas','Proteica'];
+  var SABORES = ['Neutro','Picante','Suave','Salado','Dulce','Agridulce','Ácido','Ahumado'];
+
+  var estado = {
+    sobras: [],
+    alacena: [],
+    dieta: 'Sin restricción',
+    sabor: 'Neutro',
+    sinSobras: false,
+    ultimasRecetas: []
+  };
+
+  function guardarLS(){ localStorage.setItem('bettina_guardados', JSON.stringify(getGuardados())); }
+  function getGuardados(){
+    try { return JSON.parse(localStorage.getItem('bettina_guardados')) || []; }
+    catch(e){ return []; }
+  }
+
+  // ---------- CHIPS ----------
+  function renderChips(){
+    var cs = document.getElementById('chips-sobras');
+    cs.innerHTML = estado.sobras.map(function(s,i){
+      return '<div class="chip">'+s+'<button class="rm" data-tipo="sobra" data-i="'+i+'">✕</button></div>';
+    }).join('');
+    var ca = document.getElementById('chips-alacena');
+    ca.innerHTML = estado.alacena.map(function(s,i){
+      return '<div class="chip">'+s+'<button class="rm" data-tipo="alacena" data-i="'+i+'">✕</button></div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function(e){
+    if(e.target.classList.contains('rm')){
+      var tipo = e.target.getAttribute('data-tipo');
+      var i = parseInt(e.target.getAttribute('data-i'));
+      if(tipo === 'sobra') estado.sobras.splice(i,1);
+      else estado.alacena.splice(i,1);
+      renderChips();
+    }
+  });
+
+  function agregarSobra(){
+    var input = document.getElementById('input-sobra');
+    var val = input.value.trim();
+    if(val){ estado.sobras.push(val); input.value=''; renderChips(); input.focus(); }
+  }
+  function agregarAlacena(){
+    var input = document.getElementById('input-alacena');
+    var val = input.value.trim();
+    if(val){ estado.alacena.push(val); input.value=''; renderChips(); input.focus(); }
+  }
+
+  // ---------- OPCIONES (dieta / sabor) ----------
+  function renderOpciones(){
+    var od = document.getElementById('opciones-dieta');
+    od.innerHTML = DIETAS.map(function(d){
+      return '<div class="opcion '+(d===estado.dieta?'selected':'')+'" data-tipo="dieta" data-val="'+d+'">'+d+'</div>';
+    }).join('');
+    var os = document.getElementById('opciones-sabor');
+    os.innerHTML = SABORES.map(function(s){
+      return '<div class="opcion '+(s===estado.sabor?'selected':'')+'" data-tipo="sabor" data-val="'+s+'">'+s+'</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function(e){
+    if(e.target.classList.contains('opcion')){
+      var tipo = e.target.getAttribute('data-tipo');
+      var val = e.target.getAttribute('data-val');
+      estado[tipo] = val;
+      renderOpciones();
+    }
+  });
+
+  // ---------- SWITCH SIN SOBRAS ----------
+  document.getElementById('switch-sin-sobras').addEventListener('change', function(e){
+    estado.sinSobras = e.target.checked;
+    document.getElementById('bloque-sobras').classList.toggle('hidden', estado.sinSobras);
+    document.getElementById('label-modo').textContent = estado.sinSobras
+      ? '🆕 Quiero una receta nueva'
+      : '🍲 Tengo sobras para reutilizar';
+  });
+
+  // ---------- LLAMADA A LA IA ----------
+  function generarRecetas(){
+    if(!estado.sinSobras && estado.sobras.length === 0){
+      mostrarToast('⚠️ Agregá al menos una sobra o activá "receta nueva"');
+      return;
+    }
+
+    var btn = document.getElementById('btn-generar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Consultando a la IA...';
+
+    var cont = document.getElementById('resultado-container');
+    cont.innerHTML = '<div class="card loader"><div class="spinner"></div><p>Bettina está pensando recetas increíbles para vos... 🍳✨</p></div>';
+
+    fetch('/.netlify/functions/generar-recetas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sobras: estado.sobras,
+        alacena: estado.alacena,
+        dieta: estado.dieta,
+        sabor: estado.sabor,
+        sinSobras: estado.sinSobras
+      })
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      btn.disabled = false;
+      btn.textContent = '✨ Generar 3 recetas con IA';
+
+      if(data.error){
+        cont.innerHTML = '<div class="card"><p>😕 Hubo un error: '+data.error+'</p><p style="font-size:0.85em;margin-top:8px;color:#a88">'+(data.detalle ? JSON.stringify(data.detalle).slice(0,200) : '')+'</p></div>';
+        return;
+      }
+
+      estado.ultimasRecetas = data.recetas;
+      renderRecetas(data.recetas, cont);
+    })
+    .catch(function(err){
+      btn.disabled = false;
+      btn.textContent = '✨ Generar 3 recetas con IA';
+      cont.innerHTML = '<div class="card"><p>😕 No se pudo conectar con la IA. Revisá tu conexión o la configuración de Netlify.</p></div>';
+      console.error(err);
+    });
+  }
+
+  function renderRecetas(recetas, cont){
+    cont.innerHTML = '<h2 style="margin:15px 0 10px;">🎉 Tus 3 opciones generadas por IA</h2>' +
+      recetas.map(function(r, idx){
+        return '<div class="receta-card">' +
+          '<div class="receta-header">' +
+            '<div class="receta-titulo">'+r.emoji+' '+r.nombre+'</div>' +
+            '<div class="badge">'+r.estilo+'</div>' +
+          '</div>' +
+          '<p style="color:#7a5c3e;font-size:0.9em;">'+r.descripcion+'</p>' +
+          '<div class="receta-info">' +
+            '<span>🔥 '+r.calorias+' kcal</span>' +
+            '<span>🥗 '+r.dieta+'</span>' +
+            '<span>⏱️ '+r.tiempoPrep+'</span>' +
+          '</div>' +
+          '<div class="receta-botones">' +
+            '<button class="btn-ver" data-action="ver" data-idx="'+idx+'">👀 Ver receta completa</button>' +
+            '<button class="btn-guardar" data-action="guardar" data-idx="'+idx+'">⭐ Guardar</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+  }
+
+  // ---------- ACCIONES SOBRE RECETAS (delegación) ----------
+  document.addEventListener('click', function(e){
+    var action = e.target.getAttribute('data-action');
+    if(!action) return;
+
+    if(action === 'ver'){
+      var idx = parseInt(e.target.getAttribute('data-idx'));
+      var receta = e.target.closest('#lista-guardados') ? getGuardados()[idx] : estado.ultimasRecetas[idx];
+      abrirModal(receta);
+    }
+    if(action === 'guardar'){
+      var idx2 = parseInt(e.target.getAttribute('data-idx'));
+      var receta2 = estado.ultimasRecetas[idx2];
+      var guardados = getGuardados();
+      receta2.id = Date.now();
+      guardados.unshift(receta2);
+      localStorage.setItem('bettina_guardados', JSON.stringify(guardados));
+      mostrarToast('⭐ Receta guardada correctamente');
+    }
+    if(action === 'borrar'){
+      var id = e.target.getAttribute('data-id');
+      var guardados = getGuardados().filter(function(g){ return g.id != id; });
+      localStorage.setItem('bettina_guardados', JSON.stringify(guardados));
+      renderGuardados();
+      mostrarToast('🗑️ Receta eliminada');
+    }
+    if(action === 'whatsapp'){
+      var idx3 = e.target.getAttribute('data-idx');
+      var id3 = e.target.getAttribute('data-id');
+      var receta3;
+      if(id3){ receta3 = getGuardados().find(function(g){ return g.id == id3; }); }
+      else { receta3 = estado.ultimasRecetas[parseInt(idx3)]; }
+      compartirWhatsapp(receta3);
+    }
+    if(action === 'cerrar-modal'){
+      document.getElementById('modal-overlay').classList.add('hidden');
+    }
+  });
+
+  function abrirModal(r){
+    if(!r) return;
+    var html = '<h3>'+r.emoji+' '+r.nombre+'</h3>' +
+      '<div class="receta-info">' +
+        '<span>🔥 '+r.calorias+' kcal</span><span>🥗 '+r.dieta+'</span><span>⏱️ '+r.tiempoPrep+'</span><span>🌍 '+r.estilo+'</span>' +
+      '</div>' +
+      '<h4 style="margin-top:15px;color:#e85d04;">🛒 Ingredientes</h4>' +
+      '<ul>' + r.ingredientes.map(function(i){ return '<li>'+i+'</li>'; }).join('') + '</ul>' +
+      '<h4 style="margin-top:10px;color:#e85d04;">👩‍🍳 Preparación</h4>' +
+      '<ol>' + r.pasos.map(function(p){ return '<li>'+p+'</li>'; }).join('') + '</ol>' +
+      '<button class="btn-whatsapp" style="width:100%;margin-top:15px;" data-action="whatsapp" '+(r.id ? 'data-id="'+r.id+'"' : 'data-idx="'+estado.ultimasRecetas.indexOf(r)+'"')+'>📲 Compartir por WhatsApp</button>' +
+      '<button class="btn-cerrar" data-action="cerrar-modal">Cerrar</button>';
+    document.getElementById('modal-content').innerHTML = html;
+    document.getElementById('modal-overlay').classList.remove('hidden');
+  }
+
+  function compartirWhatsapp(r){
+    if(!r) return;
+    var texto = '👩‍🍳 *Cocinando con Bettina*\n\n' +
+      r.emoji+' *'+r.nombre+'* ('+r.estilo+')\n' +
+      r.descripcion + '\n\n' +
+      '🔥 '+r.calorias+' kcal | 🥗 '+r.dieta+' | ⏱️ '+r.tiempoPrep+'\n\n' +
+      '🛒 *Ingredientes:*\n' + r.ingredientes.map(function(i){ return '• '+i; }).join('\n') + '\n\n' +
+      '👩‍🍳 *Preparación:*\n' + r.pasos.map(function(p,i){ return (i+1)+'. '+p; }).join('\n');
+    window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+  }
+
+  // ---------- GUARDADOS ----------
+  function renderGuardados(){
+    var guardados = getGuardados();
+    var cont = document.getElementById('lista-guardados');
+    if(guardados.length === 0){
+      cont.innerHTML = '<div class="empty-state"><div class="emoji">🍽️</div><p>Todavía no guardaste ninguna receta</p></div>';
+      return;
+    }
+    cont.innerHTML = guardados.map(function(r){
+      return '<div class="receta-card">' +
+        '<div class="receta-header"><div class="receta-titulo">'+r.emoji+' '+r.nombre+'</div><div class="badge">'+r.estilo+'</div></div>' +
+        '<p style="color:#7a5c3e;font-size:0.9em;">'+r.descripcion+'</p>' +
+        '<div class="receta-info"><span>🔥 '+r.calorias+' kcal</span><span>🥗 '+r.dieta+'</span><span>⏱️ '+r.tiempoPrep+'</span></div>' +
+        '<div class="receta-botones">' +
+          '<button class="btn-ver" data-action="ver" data-idx="0" onclick="event.stopPropagation()">👀 Ver</button>' +
+          '<button class="btn-whatsapp" data-action="whatsapp" data-id="'+r.id+'">📲</button>' +
+          '<button style="background:#ffcdd2;color:#c62828;" data-action="borrar" data-id="'+r.id+'">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Fix: para "ver" en guardados necesitamos identificar por id, no por idx global
+  document.addEventListener('click', function(e){
+    if(e.target.getAttribute('data-action') === 'ver' && e.target.closest('#lista-guardados')){
+      var card = e.target.closest('.receta-card');
+      var idBtn = card.querySelector('[data-action="borrar"]');
+      if(idBtn){
+        var id = idBtn.getAttribute('data-id');
+        var receta = getGuardados().find(function(g){ return g.id == id; });
+        abrirModal(receta);
+      }
+    }
+  }, true);
+
+  // ---------- NAVEGACIÓN ----------
+  function cambiarPantalla(pantalla){
+    document.getElementById('screen-nueva').classList.toggle('hidden', pantalla !== 'nueva');
+    document.getElementById('screen-guardados').classList.toggle('hidden', pantalla !== 'guardados');
+    document.getElementById('nav-nueva').classList.toggle('active', pantalla === 'nueva');
+    document.getElementById('nav-guardados').classList.toggle('active', pantalla === 'guardados');
+    if(pantalla === 'guardados') renderGuardados();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function mostrarToast(msg){
+    var existente = document.querySelector('.toast');
+    if(existente) existente.remove();
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 2800);
+  }
+
+  // ---------- BINDINGS ----------
+  document.getElementById('btn-add-sobra').addEventListener('click', agregarSobra);
+  document.getElementById('btn-add-alacena').addEventListener('click', agregarAlacena);
+  document.getElementById('btn-generar').addEventListener('click', generarRecetas);
+  document.getElementById('nav-nueva').addEventListener('click', function(){ cambiarPantalla('nueva'); });
+  document.getElementById('nav-guardados').addEventListener('click', function(){ cambiarPantalla('guardados'); });
+  document.getElementById('input-sobra').addEventListener('keypress', function(e){ if(e.key==='Enter'){ e.preventDefault(); agregarSobra(); } });
+  document.getElementById('input-alacena').addEventListener('keypress', function(e){ if(e.key==='Enter'){ e.preventDefault(); agregarAlacena(); } });
+
+  // ---------- INIT ----------
+  renderChips();
+  renderOpciones();
+  renderGuardados();
+
+})();
+</script>
+
+</body>
+</html>
+```

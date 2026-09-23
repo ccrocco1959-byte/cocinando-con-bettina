@@ -1,5 +1,4 @@
 exports.handler = async function (event, context) {
-  // Solo permitir POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -10,7 +9,7 @@ exports.handler = async function (event, context) {
   try {
     const { ingredientes, dieta, tipoComida, calorias } = JSON.parse(event.body);
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return {
@@ -31,37 +30,43 @@ Para cada receta dame:
 - Paso a paso de preparación
 - Calorías aproximadas totales
 
-Respondé en formato JSON con un array de 3 objetos, cada uno con las claves: nombre, ingredientes (array), pasos (array), calorias.
-No agregues texto extra fuera del JSON.
+Respondé SOLO en formato JSON, sin texto extra, con un array de 3 objetos, cada uno con las claves: nombre, ingredientes (array), pasos (array), calorias.
 `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.8,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: data.error?.message || "Error en la API de OpenAI" }),
+        body: JSON.stringify({ error: data.error?.message || "Error en la API de Gemini" }),
       };
     }
 
-    const contenido = data.choices[0].message.content;
+    const contenido = data.candidates[0].content.parts[0].text;
+
+    // Limpiar posibles bloques de código markdown que Gemini a veces agrega
+    const limpio = contenido.replace(/```json/g, "").replace(/```/g, "").trim();
 
     return {
       statusCode: 200,
-      body: contenido,
+      body: limpio,
     };
   } catch (error) {
     return {
